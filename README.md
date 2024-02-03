@@ -1,6 +1,9 @@
 Install LONGHORN via helm:
+
 helm repo add longhorn https://charts.longhorn.io
+
 helm repo up
+
 helm install longhorn longhorn/longhorn --namespace longhorn-system --create-namespace
 
 kubectl -n longhorn-system get pod -w
