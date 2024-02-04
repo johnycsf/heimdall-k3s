@@ -21,9 +21,9 @@ spec:
         env:
         - name: TZ
           value: "America/New_York"
-          name: PGID
+        - name: PGID
           value: "1000"
-          name: PUID
+        - name: PUID
           value: "1000"
         volumeMounts:
         - name: heimdall
