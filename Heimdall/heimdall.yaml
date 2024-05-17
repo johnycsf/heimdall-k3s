@@ -18,6 +18,7 @@ spec:
       containers:
       - name: heimdall
         image: linuxserver/heimdall:latest
+        imagePullPolicy: Always
         env:
         - name: TZ
           value: "America/New_York"
