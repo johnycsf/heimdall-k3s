@@ -85,3 +85,7 @@ This also deletes the PVC and the Longhorn volume data.
 - One replica only — Heimdall config is not meant to be shared across many pods.
 - `image: ...:latest` tracks stable LinuxServer releases. Pin a version tag if you want stricter control.
 - Put Heimdall behind a reverse proxy (Traefik, nginx, Caddy) if you expose it outside your LAN.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
