@@ -2,6 +2,8 @@
 
 Deploy [Heimdall](https://heimdall.site/) on a [Kubernetes](https://kubernetes.io/) homelab with almost no Kubernetes knowledge.
 
+Docker Compose version (no Kubernetes needed): [heimdall-docker](https://github.com/johnycsf/heimdall-docker)
+
 Heimdall is a simple application dashboard — a start page for links to the rest of your self-hosted apps (Nextcloud, Vaultwarden, etc.).
 
 This repo follows the current [LinuxServer Heimdall image docs](https://docs.linuxserver.io/images/docker-heimdall/).
