@@ -1,4 +1,4 @@
-# Heimdall on k3s — single-file deploy for a homelab
+# Heimdall on Kubernetes — single-file deploy for a homelab
 # Docs: https://docs.linuxserver.io/images/docker-heimdall/
 apiVersion: v1
 kind: Namespace

@@ -1,6 +1,6 @@
-# heimdall-k3s
+# heimdall-k8s
 
-Deploy [Heimdall](https://heimdall.site/) on a [k3s](https://k3s.io/) homelab with almost no Kubernetes knowledge.
+Deploy [Heimdall](https://heimdall.site/) on a [Kubernetes](https://kubernetes.io/) homelab with almost no Kubernetes knowledge.
 
 Heimdall is a simple application dashboard — a start page for links to the rest of your self-hosted apps (Nextcloud, Vaultwarden, etc.).
 
@@ -8,7 +8,7 @@ This repo follows the current [LinuxServer Heimdall image docs](https://docs.lin
 
 ## What you need
 
-1. A working **k3s** cluster (`kubectl` talks to it)
+1. A working **Kubernetes** cluster (`kubectl` talks to it)
 2. **Longhorn** storage (or change `storageClassName` in `deploy.yaml`)
 3. `helm` only if you still need to install Longhorn
 
@@ -29,8 +29,8 @@ Longhorn will **automatically** create the Heimdall volume from the PVC — you 
 ## Install Heimdall
 
 ```bash
-git clone https://github.com/johnycsf/heimdall-k3s.git
-cd heimdall-k3s
+git clone https://github.com/johnycsf/heimdall-k8s.git
+cd heimdall-k8s
 chmod +x install.sh
 ./install.sh
 ```
@@ -48,7 +48,7 @@ kubectl -n heimdall get svc heimdall
 kubectl -n heimdall get svc heimdall
 ```
 
-Use the `EXTERNAL-IP` (or your node IP if you are using k3s ServiceLB / Klipper):
+Use the `EXTERNAL-IP` (or your node IP if you are using a LoadBalancer implementation (e.g. k3s ServiceLB, MetalLB)):
 
 - **HTTP:** `http://EXTERNAL-IP/`
 - **HTTPS:** `https://EXTERNAL-IP/` (self-signed certificate — your browser will warn)
