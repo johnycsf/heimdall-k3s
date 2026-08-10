@@ -48,7 +48,7 @@ kubectl -n heimdall get svc heimdall
 kubectl -n heimdall get svc heimdall
 ```
 
-Use the `EXTERNAL-IP` (or your node IP if you are using a LoadBalancer implementation (e.g. k3s ServiceLB, MetalLB)):
+Use the `EXTERNAL-IP` (or your node IP with k3s ServiceLB / MetalLB):
 
 - **HTTP:** `http://EXTERNAL-IP/`
 - **HTTPS:** `https://EXTERNAL-IP/` (self-signed certificate — your browser will warn)
