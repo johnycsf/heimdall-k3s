@@ -1,5 +1,5 @@
 # Heimdall on Kubernetes — official php:apache image + upstream Heimdall source
-# Image: ghcr.io/johnycsf/heimdall (built from Dockerfile in this repo)
+# Built locally by install.sh as heimdall:local (see Dockerfile)
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -39,8 +39,8 @@ spec:
     spec:
       containers:
         - name: heimdall
-          image: ghcr.io/johnycsf/heimdall:latest
-          imagePullPolicy: Always
+          image: heimdall:local
+          imagePullPolicy: Never
           env:
             - name: TZ
               value: "America/New_York"
