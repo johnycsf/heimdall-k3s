@@ -10,6 +10,8 @@ Uses the **official** [`php:8.4-apache`](https://hub.docker.com/_/php) image and
 
 `install.sh` builds `heimdall:local` and loads it into k3s/kind when those tools are present.
 
+> **Updating an older clone?** Pulling git is safe. Re-running `./install.sh` against a LinuxServer Deployment is not. Read [BREAKING-CHANGES.md](BREAKING-CHANGES.md).
+
 ## What you need
 
 1. A working **Kubernetes** cluster (`kubectl` talks to it)
@@ -65,11 +67,13 @@ Edit `deploy.yaml` before installing (or re-apply after editing):
 
 ## Update
 
-Rebuild and restart:
+Only for clusters already on `heimdall:local` from this repo:
 
 ```bash
 ./install.sh
 ```
+
+LinuxServer-based installs: see [BREAKING-CHANGES.md](BREAKING-CHANGES.md) — do not re-run install after pull unless you intend a fresh install.
 
 ## Uninstall
 

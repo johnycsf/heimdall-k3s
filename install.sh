@@ -34,6 +34,30 @@ EOF
   exit 1
 fi
 
+if [[ "${I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL:-}" != "yes" ]]; then
+  if kubectl -n heimdall get deploy heimdall >/dev/null 2>&1; then
+    img="$(kubectl -n heimdall get deploy heimdall -o jsonpath='{.spec.template.spec.containers[0].image}' 2>/dev/null || true)"
+    if [[ "${img}" == *linuxserver* ]] || [[ "${img}" == *lscr.io* ]]; then
+      cat <<'EOF' >&2
+Refusing to continue: Heimdall is still deployed with a LinuxServer image.
+
+git pull alone is safe. Re-running install.sh is NOT an in-place upgrade.
+
+See BREAKING-CHANGES.md
+
+Options:
+  1) Leave the cluster as-is.
+  2) Backup, delete the heimdall namespace/PVC, install fresh.
+  3) Only if you accept a fresh install:
+       I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL=yes ./install.sh
+EOF
+      exit 1
+    fi
+  fi
+else
+  echo "Override set: I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL=yes — continuing."
+fi
+
 if command -v docker >/dev/null 2>&1; then
   BUILDER=(docker)
 elif command -v podman >/dev/null 2>&1; then
