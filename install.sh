@@ -45,4 +45,4 @@ echo "Get the service address with:"
 echo "  kubectl -n heimdall get svc heimdall"
 echo
 echo "Open http://<EXTERNAL-IP>/ in your browser."
-echo "(HTTPS also works on port 443 with a self-signed cert.)"
+echo "Then set APP_URL in deploy.yaml to that URL and re-apply if needed."

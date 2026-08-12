@@ -1,5 +1,5 @@
-# Heimdall on Kubernetes — single-file deploy for a homelab
-# Docs: https://docs.linuxserver.io/images/docker-heimdall/
+# Heimdall on Kubernetes — official php:apache image + upstream Heimdall source
+# Image: ghcr.io/johnycsf/heimdall (built from Dockerfile in this repo)
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -39,23 +39,18 @@ spec:
     spec:
       containers:
         - name: heimdall
-          image: lscr.io/linuxserver/heimdall:latest
-          imagePullPolicy: IfNotPresent
+          image: ghcr.io/johnycsf/heimdall:latest
+          imagePullPolicy: Always
           env:
-            - name: PUID
-              value: "1000"
-            - name: PGID
-              value: "1000"
             - name: TZ
               value: "America/New_York"
-            # Allow Heimdall to reach other LAN/homelab apps by private IP
             - name: ALLOW_INTERNAL_REQUESTS
               value: "true"
+            - name: APP_URL
+              value: "http://localhost"
           ports:
             - name: http
               containerPort: 80
-            - name: https
-              containerPort: 443
           volumeMounts:
             - name: config
               mountPath: /config
@@ -63,7 +58,7 @@ spec:
             httpGet:
               path: /
               port: http
-            initialDelaySeconds: 15
+            initialDelaySeconds: 20
             periodSeconds: 10
           resources:
             requests:
@@ -89,6 +84,3 @@ spec:
     - name: http
       port: 80
       targetPort: http
-    - name: https
-      port: 443
-      targetPort: https

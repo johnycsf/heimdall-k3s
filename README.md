@@ -6,7 +6,9 @@ Docker Compose version (no Kubernetes needed): [heimdall-docker](https://github.
 
 Heimdall is a simple application dashboard — a start page for links to the rest of your self-hosted apps (Nextcloud, Vaultwarden, etc.).
 
-This repo follows the current [LinuxServer Heimdall image docs](https://docs.linuxserver.io/images/docker-heimdall/).
+Uses the **official** [`php:8.4-apache`](https://hub.docker.com/_/php) image and builds Heimdall from the [upstream release](https://github.com/linuxserver/Heimdall/releases). Published as `ghcr.io/johnycsf/heimdall:latest` (no LinuxServer container runtime).
+
+After the first GitHub Actions build, open the [heimdall package](https://github.com/users/johnycsf/packages/container/package/heimdall) → **Package settings** → set visibility to **Public** (required once so clusters can pull without a GitHub login).
 
 ## What you need
 
@@ -53,7 +55,8 @@ kubectl -n heimdall get svc heimdall
 Use the `EXTERNAL-IP` (or your node IP with k3s ServiceLB / MetalLB):
 
 - **HTTP:** `http://EXTERNAL-IP/`
-- **HTTPS:** `https://EXTERNAL-IP/` (self-signed certificate — your browser will warn)
+
+Set `APP_URL` in `deploy.yaml` to that same URL after you know it, then re-apply.
 
 ## Customize
 
@@ -62,15 +65,14 @@ Edit `deploy.yaml` before installing (or re-apply after editing):
 | Setting | Where | Notes |
 |--------|--------|--------|
 | Timezone | `TZ` | Default `America/New_York` |
-| User/group | `PUID` / `PGID` | Default `1000` (LinuxServer recommendation) |
 | LAN app links | `ALLOW_INTERNAL_REQUESTS` | Set `true` so Heimdall can reach private IPs |
+| Public URL | `APP_URL` | Match the URL you open in the browser |
 | Disk size | PVC `storage` | Default `1Gi` |
 
 ## Update
 
 ```bash
-kubectl -n heimdall set image deployment/heimdall \
-  heimdall=lscr.io/linuxserver/heimdall:latest
+kubectl -n heimdall rollout restart deployment/heimdall
 kubectl -n heimdall rollout status deployment/heimdall
 ```
 
@@ -85,8 +87,9 @@ This also deletes the PVC and the Longhorn volume data.
 ## Notes for beginners
 
 - One replica only — Heimdall config is not meant to be shared across many pods.
-- `image: ...:latest` tracks stable LinuxServer releases. Pin a version tag if you want stricter control.
+- The image is rebuilt from upstream Heimdall releases on `php:apache`. Pin a digest if you want stricter control.
 - Put Heimdall behind a reverse proxy (Traefik, nginx, Caddy) if you expose it outside your LAN.
+- Fresh install only — do not reuse a LinuxServer `/config` volume with this image.
 
 ## Contributing
 
