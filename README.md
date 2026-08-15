@@ -16,10 +16,11 @@ Uses the **official** [`php:8.4-apache`](https://hub.docker.com/_/php) image and
 
 ## What you need
 
-1. A working **Kubernetes** cluster (`kubectl` talks to it)
-2. **docker** or **podman** (to build the image)
-3. **Longhorn** storage (or change `storageClassName` in `deploy.yaml`)
-4. `helm` only if you still need to install Longhorn
+- A Kubernetes cluster (`kubectl` context already set)
+- `sudo` on this machine so `./install.sh` can install missing tools (kubectl, helm, curl, openssl, rsync, …)
+- Disk for PersistentVolumes (Longhorn is installed automatically if the `longhorn` StorageClass is missing)
+
+`./install.sh` detects your OS and installs host dependencies automatically.
 
 ## One-time: install Longhorn
 

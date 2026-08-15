@@ -4,35 +4,10 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-need() {
-  command -v "$1" >/dev/null 2>&1 || {
-    echo "Missing required command: $1" >&2
-    exit 1
-  }
-}
-
-need kubectl
-
-if ! kubectl get storageclass longhorn >/dev/null 2>&1; then
-  cat <<'EOF' >&2
-Longhorn storage class not found.
-
-Install Longhorn first (one-time, shared by these homelab apps):
-
-  helm repo add longhorn https://charts.longhorn.io
-  helm repo update
-  helm install longhorn longhorn/longhorn \
-    --namespace longhorn-system --create-namespace
-
-Wait until pods are ready:
-
-  kubectl -n longhorn-system get pod
-
-Then re-run this script.
-EOF
-  exit 1
-fi
+# shellcheck source=deps.sh
+source "${ROOT}/deps.sh"
+ensure_host_deps heimdall-k8s sqlite3
+ensure_longhorn_storage
 
 if [[ "${I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL:-}" != "yes" ]]; then
   if kubectl -n heimdall get deploy heimdall >/dev/null 2>&1; then
