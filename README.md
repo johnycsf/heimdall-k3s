@@ -90,6 +90,10 @@ This also deletes the PVC and the Longhorn volume data.
 - Multi-node clusters: push `heimdall:local` to a registry you control and update `image` / `imagePullPolicy` in `deploy.yaml`.
 - Put Heimdall behind a reverse proxy (Traefik, nginx, Caddy) if you expose it outside your LAN.
 
+## Repository activity
+
+![Repobeats analytics image](https://repobeats.axiom.co/api/embed/bc9a5953ce99f544324924618df9438258cb6ec2.svg "Repobeats analytics image")
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
