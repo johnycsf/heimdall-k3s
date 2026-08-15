@@ -1,15 +1,71 @@
 #!/usr/bin/env bash
 # Safely update Heimdall on Kubernetes and prune unused local images when possible.
-# Safe to run while the app is live (rollout recreates the pod with the new image).
+# Creates a local rollback backup first, then asks whether to keep it.
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$ROOT"
+NS=heimdall
 
 need() {
   command -v "$1" >/dev/null 2>&1 || {
     echo "Missing required command: $1" >&2
     exit 1
   }
+}
+
+ask_backup_retention() {
+  local dir="$1"
+  if [[ ! -d "${dir}" ]]; then
+    return 0
+  fi
+  if [[ ! -t 0 ]]; then
+    echo "No interactive terminal — keeping backup at ${dir}"
+    return 0
+  fi
+  echo
+  local reply=""
+  read -r -p "Update succeeded. Keep rollback backup at ${dir}? [Y/n] " reply || true
+  case "${reply:-Y}" in
+    n|N|no|NO)
+      rm -rf "${dir}"
+      rmdir backups 2>/dev/null || true
+      echo "Backup deleted."
+      ;;
+    *)
+      echo "Backup kept."
+      echo "  See ${dir}/RESTORE.txt if you need to roll back."
+      ;;
+  esac
+}
+
+create_backup() {
+  BACKUP_DIR="${ROOT}/backups/update-$(date +%Y%m%d-%H%M%S)"
+  mkdir -p "${BACKUP_DIR}"
+  echo "==> Creating rollback backup in ${BACKUP_DIR} ..."
+  cp -a "${ROOT}/deploy.yaml" "${BACKUP_DIR}/" 2>/dev/null || true
+  kubectl -n "$NS" get deploy,svc,pvc -o yaml >"${BACKUP_DIR}/resources.yaml" 2>/dev/null || true
+
+  local pod
+  pod="$(kubectl -n "$NS" get pod -l app=heimdall -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+  if [[ -n "${pod}" ]]; then
+    echo "    Archiving /config from pod ${pod} ..."
+    kubectl -n "$NS" exec "${pod}" -- tar -C /config -czf - . >"${BACKUP_DIR}/config.tar.gz" \
+      || echo "    Warning: could not archive pod /config"
+  else
+    echo "    Warning: no running Heimdall pod — skipped PVC data archive"
+  fi
+
+  cat >"${BACKUP_DIR}/RESTORE.txt" <<EOF
+Heimdall k8s rollback (data):
+
+  # Recreate / restore PVC contents into a running pod, e.g.:
+  POD=\$(kubectl -n heimdall get pod -l app=heimdall -o jsonpath='{.items[0].metadata.name}')
+  kubectl -n heimdall exec -i "\$POD" -- tar -C /config -xzf - < ${BACKUP_DIR}/config.tar.gz
+  kubectl -n heimdall rollout restart deployment/heimdall
+
+Manifests snapshot: ${BACKUP_DIR}/resources.yaml
+EOF
+  echo "Backup ready: ${BACKUP_DIR}"
 }
 
 need kubectl
@@ -41,6 +97,8 @@ else
   exit 1
 fi
 
+create_backup
+
 echo "==> Rebuilding heimdall:local..."
 "${BUILDER[@]}" build -t heimdall:local "${ROOT}"
 
@@ -70,5 +128,6 @@ elif command -v docker >/dev/null 2>&1; then
 fi
 
 echo
-echo "Update finished. PVC data was left untouched."
+echo "Update finished. PVC data was left untouched (backup is a point-in-time copy)."
 echo "  kubectl -n heimdall get svc heimdall"
+ask_backup_retention "${BACKUP_DIR}"
