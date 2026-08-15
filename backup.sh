@@ -37,6 +37,11 @@ Fresh-machine workflow:
   1) Install this stack on the new host (./install.sh) so runtime exists.
   2) ./backup.sh --restore --from /mnt/usb/my-backups
   3) Script replaces data/secrets and finishes app-specific repair (e.g. Nextcloud scan).
+
+Database safety:
+  MariaDB/Nextcloud  — logical dump (--single-transaction), never live datadir copy.
+  SQLite apps       — service stopped/scaled down, WAL checkpoint, then file copy.
+  Incremental rsync applies to files; each MariaDB dump is a full verified SQL file.
 EOF
 }
 
@@ -175,6 +180,46 @@ EOF
 
 
 
+# --- SQLite safety (stop/quiesce, checkpoint WAL, then copy; never copy a live DB) ---
+sqlite_checkpoint_tree() {
+  local root="$1"
+  command -v sqlite3 >/dev/null 2>&1 || {
+    echo "    sqlite3 CLI not on host — relying on stopped service + full file copy (incl. -wal/-shm)."
+    return 0
+  }
+  local db count=0
+  while IFS= read -r -d '' db; do
+    echo "    Checkpointing SQLite: $db"
+    sqlite3 "$db" "PRAGMA wal_checkpoint(TRUNCATE);" >/dev/null
+    count=$((count + 1))
+  done < <(find "$root" -type f \( -name '*.sqlite' -o -name '*.sqlite3' -o -name 'db.sqlite3' -o -name 'app.sqlite' \) -print0 2>/dev/null)
+  echo "    Checkpointed ${count} SQLite file(s)."
+}
+
+verify_sqlite_tree() {
+  local root="$1"
+  local found=0
+  local db
+  while IFS= read -r -d '' db; do
+    found=1
+    if [[ ! -s "$db" ]]; then
+      echo "SQLite file empty after backup: $db" >&2
+      return 1
+    fi
+    if command -v sqlite3 >/dev/null 2>&1; then
+      sqlite3 "$db" "PRAGMA integrity_check;" | grep -qx 'ok' || {
+        echo "SQLite integrity_check failed: $db" >&2
+        return 1
+      }
+    fi
+    echo "    OK SQLite: $db ($(wc -c <"$db" | tr -d ' ') bytes)"
+  done < <(find "$root" -type f \( -name '*.sqlite' -o -name '*.sqlite3' -o -name 'db.sqlite3' -o -name 'app.sqlite' \) -print0 2>/dev/null)
+  if [[ "$found" -eq 0 ]]; then
+    echo "Warning: no SQLite DB file found under $root (app may be empty/new)." >&2
+  fi
+}
+
+
 pull_pod_tree() {
   local pod="$1" remote="$2" dest="$3"
   mkdir -p "$dest"
@@ -187,6 +232,7 @@ push_pod_tree() {
   tar -C "$src" -cf - . | kubectl -n "$NS" exec -i "$pod" -- tar -C "$remote" -xf -
 }
 
+
 do_backup() {
   need kubectl
   need_rsync
@@ -194,25 +240,74 @@ do_backup() {
   DEST="$(mkdir -p "$DEST" && cd "$DEST" && pwd)"
   prepare_snapshot_dirs "$DEST"
   echo "==> Snapshot ${SNAP_NAME} -> ${SNAP_DIR}"
-  local pod
-  pod="$(kubectl -n "$NS" get pod -l app=heimdall -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
-  [[ -n "$pod" ]] || { echo "No Heimdall pod — is it installed?" >&2; exit 1; }
+  echo "==> DB strategy: scale to 0, checkpoint SQLite on PVC, then incremental copy."
+
+  restore_service() {
+    kubectl -n "$NS" delete pod heimdall-backup-helper --ignore-not-found >/dev/null 2>&1 || true
+    kubectl -n "$NS" scale deployment/heimdall --replicas=1 >/dev/null 2>&1 || true
+  }
+  cleanup_failed() {
+    restore_service
+    rm -rf "${SNAP_DIR}"
+  }
+  trap cleanup_failed EXIT
+
+  echo "==> Scaling Heimdall to 0 for consistent SQLite..."
+  kubectl -n "$NS" scale deployment/heimdall --replicas=0
+  kubectl -n "$NS" wait --for=delete pod -l app=heimdall --timeout=120s 2>/dev/null || true
+
+  kubectl -n "$NS" delete pod heimdall-backup-helper --ignore-not-found >/dev/null 2>&1 || true
+  cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: heimdall-backup-helper
+  namespace: ${NS}
+spec:
+  restartPolicy: Never
+  containers:
+    - name: helper
+      image: busybox:1.36
+      command: ["sleep", "3600"]
+      volumeMounts:
+        - name: config
+          mountPath: /config
+  volumes:
+    - name: config
+      persistentVolumeClaim:
+        claimName: heimdall-config
+EOF
+  kubectl -n "$NS" wait --for=condition=Ready pod/heimdall-backup-helper --timeout=120s
 
   local staging
   staging="$(mktemp -d)"
-  echo "==> Archiving /config from ${pod}..."
-  pull_pod_tree "$pod" /config "${staging}/files"
+  # Checkpoint inside helper if sqlite3 exists; busybox may not have it — copy then checkpoint on host
+  pull_pod_tree heimdall-backup-helper /config "${staging}/files"
+  sqlite_checkpoint_tree "${staging}/files"
+  # Re-push checkpointed DB only if we modified WAL on host — simpler: checkpoint on staging then rsync staging
   local prev_files=""
   [[ -n "${PREV_LINK}" && -d "${PREV_LINK}/files" ]] && prev_files="${PREV_LINK}/files"
   rsync_incremental "${staging}/files" "${SNAP_DIR}/files" "${prev_files}"
+  verify_sqlite_tree "${SNAP_DIR}/files"
   rm -rf "$staging"
 
   cp -a "${ROOT}/deploy.yaml" "${SNAP_DIR}/" 2>/dev/null || true
   kubectl -n "$NS" get deploy,svc,pvc -o yaml >"${SNAP_DIR}/resources.yaml" 2>/dev/null || true
-  write_meta "${SNAP_DIR}" "$STACK_ID" "heimdall /config"
+  cat >"${SNAP_DIR}/META.txt" <<EOF
+stack=${STACK_ID}
+created=$(date -Iseconds)
+host=$(hostname 2>/dev/null || echo unknown)
+note=heimdall /config after scale-0 + sqlite checkpoint
+db_engine=sqlite
+db_method=scale0+wal_checkpoint+rsync
+EOF
+
+  trap - EXIT
+  restore_service
+  kubectl -n "$NS" rollout status deployment/heimdall --timeout=180s
   finalize_snapshot "$DEST"
   prune_snapshots "$DEST" "${KEEP}"
-  echo "Tip: store this backup root on an external drive or NAS."
+  echo "Backup OK. Tip: store on external drive or NAS."
 }
 
 do_restore() {
