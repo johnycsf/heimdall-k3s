@@ -69,13 +69,16 @@ Edit `deploy.yaml` before installing (or re-apply after editing):
 
 ## Update
 
-Only for clusters already on `heimdall:local` from this repo:
+Keep the stack current (safe while pods are running; brief rollout downtime):
 
 ```bash
-./install.sh
+chmod +x update.sh
+./update.sh
 ```
 
-LinuxServer-based installs: see [BREAKING-CHANGES.md](BREAKING-CHANGES.md) — do not re-run install after pull unless you intend a fresh install.
+This re-applies manifests, rolls Deployments so `:latest` images refresh, and prunes **unused** images on this machine when possible (k3s `crictl rmi --prune` or Docker dangling prune). PVCs and Secrets are left untouched.
+
+Only for clusters already on `heimdall:local` — see [BREAKING-CHANGES.md](BREAKING-CHANGES.md).
 
 ## Uninstall
 
