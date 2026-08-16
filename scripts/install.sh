@@ -59,7 +59,7 @@ else
 fi
 
 ui_step "Building heimdall:local"
-ui_run "Build image" "${BUILDER[@]}" build -t heimdall:local "${ROOT}"
+ui_run --stream "Build image" "${BUILDER[@]}" build -t heimdall:local "${ROOT}"
 
 ui_step "Loading image into the cluster (when possible)"
 loaded=false
