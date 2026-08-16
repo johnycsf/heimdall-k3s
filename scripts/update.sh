@@ -2,7 +2,7 @@
 # Safely update Heimdall on Kubernetes and prune unused local images when possible.
 # Creates a local rollback backup first, then asks whether to keep it.
 set -euo pipefail
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 NS=heimdall
 
@@ -20,8 +20,8 @@ Tip: Local backups under backups/ can fill your disk over time.
 Copy important snapshots to an external drive, NAS, or cloud
 (rclone, Backblaze B2, S3, Nextcloud, etc.), then keep fewer copies here.
 Restore later with:
-  ./backup.sh --restore --from ./backups
-  ./backup.sh --restore --from /mnt/usb/my-backups
+  ./manage.sh backup --restore --from ./backups
+  ./manage.sh backup --restore --from /mnt/usb/my-backups
 EOF
 }
 
@@ -105,21 +105,21 @@ ask_backup_retention() {
       prune_old_backups "${keep}"
       print_offsite_tip
       echo "  This snapshot: ${dir}"
-      echo "  Manual restore: ./backup.sh --restore --from ./backups"
+      echo "  Manual restore: ./manage.sh backup --restore --from ./backups"
       ;;
   esac
 }
 
 create_backup() {
-  if [[ ! -x "${ROOT}/backup.sh" ]]; then
+  if [[ ! -x "${ROOT}/scripts/backup.sh" ]]; then
     echo "Missing executable backup.sh (required for pre-update snapshots)." >&2
     exit 1
   fi
   local keep="${DEFAULT_KEEP}"
   [[ -f "${KEEP_FILE}" ]] && keep="$(tr -dc '0-9' <"${KEEP_FILE}" || true)"
   [[ -z "${keep}" ]] && keep="${DEFAULT_KEEP}"
-  echo "==> Pre-update snapshot via ./backup.sh --dest ${BACKUP_ROOT} ..."
-  "${ROOT}/backup.sh" --dest "${BACKUP_ROOT}" --keep "${keep}"
+  echo "==> Pre-update snapshot via ./manage.sh backup --dest ${BACKUP_ROOT} ..."
+  "${ROOT}/scripts/backup.sh" --dest "${BACKUP_ROOT}" --keep "${keep}"
   if [[ -L "${BACKUP_ROOT}/latest" ]]; then
     BACKUP_DIR="$(readlink -f "${BACKUP_ROOT}/latest")"
   else
@@ -135,8 +135,8 @@ create_backup() {
 
 need kubectl
 
-# shellcheck source=deps.sh
-source "${ROOT}/deps.sh"
+# shellcheck source=scripts/deps.sh
+source "${ROOT}/scripts/deps.sh"
 require_storage_class
 
 if [[ "${I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL:-}" != "yes" ]]; then
@@ -147,7 +147,7 @@ if [[ "${I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL:-}" != "yes" ]]; then
       exit 1
     fi
   else
-    echo "Heimdall is not installed yet. Run ./install.sh first." >&2
+    echo "Heimdall is not installed yet. Run ./manage.sh first." >&2
     exit 1
   fi
 fi

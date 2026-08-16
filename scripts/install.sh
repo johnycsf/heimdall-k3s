@@ -4,9 +4,9 @@
 # Re-run anytime to change StorageClass preference or replica count.
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=deps.sh
-source "${ROOT}/deps.sh"
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# shellcheck source=scripts/deps.sh
+source "${ROOT}/scripts/deps.sh"
 
 ui_banner "Heimdall" "Kubernetes · storage + replicas chosen interactively"
 ui_steps_init 6
@@ -40,7 +40,7 @@ Options:
   1) Leave the cluster as-is.
   2) Backup, delete the heimdall namespace/PVC, install fresh.
   3) Only if you accept a fresh install:
-       I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL=yes ./install.sh
+       I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL=yes ./manage.sh install
 EOF
       exit 1
     fi
@@ -94,4 +94,4 @@ echo
 ui_ok "Heimdall is installed (replicas=${CHOSEN_REPLICAS:-1}, storage=${CHOSEN_STORAGE_CLASS:-})"
 ui_info "Service: kubectl -n heimdall get svc heimdall"
 ui_info "Open http://<EXTERNAL-IP>/ then set APP_URL in deploy.yaml if needed"
-ui_info "Re-run ./install.sh anytime to change replicas or storage preference"
+ui_info "Re-run ./manage.sh anytime to change replicas or storage preference"

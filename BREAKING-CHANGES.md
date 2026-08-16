@@ -14,12 +14,12 @@ If you installed from an **older revision**, re-applying current manifests is **
 
 ## If you already have a working Heimdall
 
-1. **Do nothing** — do not run `./install.sh` after pulling.
+1. **Do nothing** — do not run `./manage.sh` after pulling.
 2. Or pin the last working commit.
 3. Or migrate deliberately with a new PVC after backup.
 
 `install.sh` refuses when it detects a LinuxServer Heimdall image still deployed, unless:
 
 ```bash
-I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL=yes ./install.sh
+I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL=yes ./manage.sh install
 ```
