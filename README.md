@@ -2,8 +2,9 @@
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/bc9a5953ce99f544324924618df9438258cb6ec2.svg "Repobeats analytics image")
 
-
 [![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/johnycsf)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Issues](https://img.shields.io/badge/issues-welcome-lightgrey.svg)](../../issues/new/choose)
 
 Deploy [Heimdall](https://heimdall.site/) on a [Kubernetes](https://kubernetes.io/) homelab with almost no Kubernetes knowledge.
 
@@ -17,6 +18,15 @@ Uses the **official** [`php:8.4-apache`](https://hub.docker.com/_/php) image and
 
 > **Updating an older clone?** Pulling git is safe. Re-running `./install.sh` against a LinuxServer Deployment is not. Read [BREAKING-CHANGES.md](BREAKING-CHANGES.md).
 
+**Heimdall on Kubernetes** — official PHP image build, StorageClass prompts, safe updates & backups.
+
+> **Choose your path:** [Docker Compose](https://github.com/johnycsf/heimdall-docker) · **Kubernetes (this repo)**
+
+## Who this is for
+
+**Good fit:** k3s/homelab clusters that want a lightweight app dashboard.
+
+**Not for:** reusing LinuxServer config volumes — fresh install path only (see BREAKING-CHANGES).
 
 ## Why this repo (not just another manifest dump)
 
@@ -28,6 +38,18 @@ Uses the **official** [`php:8.4-apache`](https://hub.docker.com/_/php) image and
 - Incremental hardlink **`./backup.sh`** + restore
 - **Official upstream images only**
 
+## Support this work
+
+If this stack saved you setup time, please consider sponsoring — it funds:
+
+- Keeping install/update/backup scripts working across common Linux distros
+- Testing safe upgrades against **official** upstream images
+- Building more beginner-friendly stacks that share the same `./manage.sh` UX
+
+[![Sponsor johnycsf](https://img.shields.io/badge/GitHub%20Sponsors-Donate-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/johnycsf)
+
+👉 **[github.com/sponsors/johnycsf](https://github.com/sponsors/johnycsf)**
+
 ## What you need
 
 - A Kubernetes cluster (`kubectl` context already set)
@@ -35,8 +57,6 @@ Uses the **official** [`php:8.4-apache`](https://hub.docker.com/_/php) image and
 - Disk for PersistentVolumes
 
 `./install.sh` is interactive (colors + step progress). It asks for **StorageClass** and **replica count** (with a safe per-app suggestion). Re-run it later to change those choices. Non-interactive: `STORAGE_CLASS=longhorn REPLICAS=1 ./install.sh`.
-
-
 
 ## One-time: install Longhorn
 
@@ -61,6 +81,8 @@ chmod +x manage.sh install.sh
 ./manage.sh          # interactive control center
 # or: ./install.sh
 ```
+
+Liked the install? Star the repo or [sponsor johnycsf](https://github.com/sponsors/johnycsf) so more stacks stay maintained.
 
 ## Open the dashboard
 
@@ -110,7 +132,6 @@ This re-applies manifests, rolls Deployments so `:latest` images refresh, and pr
 
 Only for clusters already on `heimdall:local` — see [BREAKING-CHANGES.md](BREAKING-CHANGES.md).
 
-
 ## Disaster recovery (full backup / restore)
 
 Incremental snapshots via `rsync` hardlinks (unchanged files are not re-copied). `./update.sh` uses this same `backup.sh` before updating (into `./backups`).
@@ -134,7 +155,6 @@ Keep the backup root on **one filesystem** so hardlinks work. Prefer an external
 
 **Database safety:** Nextcloud uses a verified MariaDB *logical* dump (`mariadb-dump --single-transaction`) — the live `data/db` / DB PVC files are never rsync'd. SQLite apps (Heimdall, Vaultwarden) are stopped or scaled to 0, WAL-checkpointed when `sqlite3` is available, integrity-checked, then copied. Incremental hardlinks apply to file trees; each SQL dump is a full verified file with a SHA-256 in `META.txt`.
 
-
 ## Uninstall
 
 ```bash
@@ -150,7 +170,6 @@ This also deletes the PVC and the Longhorn volume data.
 - Multi-node clusters: push `heimdall:local` to a registry you control and update `image` / `imagePullPolicy` in `deploy.yaml`.
 - Put Heimdall behind a reverse proxy (Traefik, nginx, Caddy) if you expose it outside your LAN.
 
-
 ## Credits
 
 This repo packages or configures upstream software. See [CREDITS.md](CREDITS.md) for the main developers and projects this work builds on.
@@ -163,11 +182,6 @@ This project is provided **as is**. The author is **not responsible** for any lo
 
 If you hit an error, please [open a GitHub Issue](../../issues/new/choose) and follow [CONTRIBUTING.md](CONTRIBUTING.md). Fixes via Pull Request are welcome. GitHub Issues/PRs are the supported way to report problems—there is no private support channel.
 
-## Support this work
+## Security
 
-If these homelab tools save you time, please consider sponsoring:
-
-[![Sponsor johnycsf](https://img.shields.io/badge/GitHub%20Sponsors-Donate-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/johnycsf)
-
-👉 **[github.com/sponsors/johnycsf](https://github.com/sponsors/johnycsf)** — tips and monthly support keep these beginner-friendly stacks maintained.
-
+See [SECURITY.md](SECURITY.md) for how to report vulnerabilities.
