@@ -2,6 +2,8 @@
 # Disaster-recovery backup/restore with incremental rsync snapshots (k8s).
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=deps.sh
+source "${ROOT}/deps.sh"
 cd "$ROOT"
 NS=heimdall
 STACK_ID="heimdall-k8s"
@@ -424,7 +426,7 @@ do_restore() {
 
   if ! kubectl -n "$NS" get deploy heimdall >/dev/null 2>&1; then
     echo "==> Deployment missing — applying deploy.yaml..."
-    kubectl apply -f "${ROOT}/deploy.yaml"
+    apply_manifest "${ROOT}/deploy.yaml"
     kubectl -n "$NS" rollout status deployment/heimdall --timeout=180s
   fi
   local pod

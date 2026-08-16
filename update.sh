@@ -135,10 +135,9 @@ create_backup() {
 
 need kubectl
 
-if ! kubectl get storageclass longhorn >/dev/null 2>&1; then
-  echo "Longhorn StorageClass not found — fix storage before updating." >&2
-  exit 1
-fi
+# shellcheck source=deps.sh
+source "${ROOT}/deps.sh"
+require_storage_class
 
 if [[ "${I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL:-}" != "yes" ]]; then
   if kubectl -n heimdall get deploy heimdall >/dev/null 2>&1; then
@@ -180,7 +179,7 @@ elif command -v kind >/dev/null 2>&1 && kind get clusters 2>/dev/null | grep -q 
 fi
 
 echo "==> Applying manifests..."
-kubectl apply -f "${ROOT}/deploy.yaml"
+apply_manifest "${ROOT}/deploy.yaml"
 echo "==> Rolling out new pods..."
 kubectl -n heimdall rollout restart deployment/heimdall
 kubectl -n heimdall rollout status deployment/heimdall --timeout=180s

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install Heimdall on a Kubernetes cluster with Longhorn storage.
+# Install Heimdall on a Kubernetes cluster (storage class chosen at install time).
 # Builds from Dockerfile (official php:apache + upstream Heimdall) — no LinuxServer image.
 set -euo pipefail
 
@@ -7,7 +7,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=deps.sh
 source "${ROOT}/deps.sh"
 ensure_host_deps heimdall-k8s sqlite3
-ensure_longhorn_storage
+configure_k8s_storage
 
 if [[ "${I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL:-}" != "yes" ]]; then
   if kubectl -n heimdall get deploy heimdall >/dev/null 2>&1; then
@@ -75,7 +75,7 @@ EOF
 fi
 
 echo "Applying Heimdall manifests..."
-kubectl apply -f "${ROOT}/deploy.yaml"
+apply_manifest "${ROOT}/deploy.yaml"
 
 echo "Waiting for Heimdall to become ready..."
 kubectl -n heimdall rollout status deployment/heimdall --timeout=180s
