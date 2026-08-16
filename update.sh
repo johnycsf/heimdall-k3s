@@ -180,6 +180,7 @@ fi
 
 echo "==> Applying manifests..."
 apply_manifest "${ROOT}/deploy.yaml"
+apply_saved_replicas heimdall
 echo "==> Rolling out new pods..."
 kubectl -n heimdall rollout restart deployment/heimdall
 kubectl -n heimdall rollout status deployment/heimdall --timeout=180s
