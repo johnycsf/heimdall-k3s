@@ -2,6 +2,9 @@
 
 ![Repobeats analytics image](https://repobeats.axiom.co/api/embed/bc9a5953ce99f544324924618df9438258cb6ec2.svg "Repobeats analytics image")
 
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/johnycsf)
+
 Deploy [Heimdall](https://heimdall.site/) on a [Kubernetes](https://kubernetes.io/) homelab with almost no Kubernetes knowledge.
 
 Docker Compose version (no Kubernetes needed): [heimdall-docker](https://github.com/johnycsf/heimdall-docker)
@@ -13,6 +16,17 @@ Uses the **official** [`php:8.4-apache`](https://hub.docker.com/_/php) image and
 `install.sh` builds `heimdall:local` and loads it into k3s/kind when those tools are present.
 
 > **Updating an older clone?** Pulling git is safe. Re-running `./install.sh` against a LinuxServer Deployment is not. Read [BREAKING-CHANGES.md](BREAKING-CHANGES.md).
+
+
+## Why this repo (not just another manifest dump)
+
+- **`./manage.sh`** control center — install, update, backup, status/doctor, uninstall
+- Interactive colored install with step progress
+- Auto-detects your OS and installs missing host tools (`kubectl`, `helm`, …)
+- Choose **StorageClass** and **replica count** (re-run anytime to change)
+- Safe **`./update.sh`** with automatic pre-update backup
+- Incremental hardlink **`./backup.sh`** + restore
+- **Official upstream images only**
 
 ## What you need
 
@@ -43,8 +57,9 @@ Longhorn will **automatically** create the Heimdall volume from the PVC — you 
 ```bash
 git clone https://github.com/johnycsf/heimdall-k8s.git
 cd heimdall-k8s
-chmod +x install.sh
-./install.sh
+chmod +x manage.sh install.sh
+./manage.sh          # interactive control center
+# or: ./install.sh
 ```
 
 ## Open the dashboard
@@ -139,3 +154,12 @@ This also deletes the PVC and the Longhorn volume data.
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Support this work
+
+If these homelab tools save you time, please consider sponsoring:
+
+[![Sponsor johnycsf](https://img.shields.io/badge/GitHub%20Sponsors-Donate-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/johnycsf)
+
+👉 **[github.com/sponsors/johnycsf](https://github.com/sponsors/johnycsf)** — tips and monthly support keep these beginner-friendly stacks maintained.
+
