@@ -151,9 +151,13 @@ This also deletes the PVC and the Longhorn volume data.
 - Put Heimdall behind a reverse proxy (Traefik, nginx, Caddy) if you expose it outside your LAN.
 
 
-## Contributing
+## Disclaimer
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+This project is provided **as is**. The author is **not responsible** for any loss, damage, data corruption, downtime, security issues, or other consequences from using it. Full text: [DISCLAIMER.md](DISCLAIMER.md).
+
+## Bug reports & contributions
+
+If you hit an error, please [open a GitHub Issue](../../issues/new/choose) and follow [CONTRIBUTING.md](CONTRIBUTING.md). Fixes via Pull Request are welcome. GitHub Issues/PRs are the supported way to report problems—there is no private support channel.
 
 ## Support this work
 
