@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Install / reconfigure Heimdall on Kubernetes (interactive).
-# Builds from Dockerfile (official php:apache + upstream Heimdall) — no LinuxServer image.
+# Builds from Dockerfile (official php:apache + upstream Heimdall) - no LinuxServer image.
 # Re-run anytime to change StorageClass preference or replica count.
 set -euo pipefail
 
@@ -8,7 +8,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # shellcheck source=scripts/deps.sh
 source "${ROOT}/scripts/deps.sh"
 
-ui_banner "Heimdall" "Kubernetes · storage + replicas chosen interactively"
+ui_banner "Heimdall" "Kubernetes - storage + replicas chosen interactively"
 ui_steps_init 6
 
 ui_step "Checking host dependencies"
@@ -23,7 +23,7 @@ configure_k8s_replicas heimdall
 ALREADY=false
 if kubectl -n heimdall get deploy heimdall >/dev/null 2>&1; then
   ALREADY=true
-  ui_info "Existing Heimdall Deployment found — refreshing manifests/replicas"
+  ui_info "Existing Heimdall Deployment found - refreshing manifests/replicas"
 fi
 
 if [[ "${I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL:-}" != "yes" ]]; then
@@ -46,7 +46,7 @@ EOF
     fi
   fi
 else
-  ui_warn "Override set: I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL=yes — continuing."
+  ui_warn "Override set: I_UNDERSTAND_THIS_IS_A_FRESH_INSTALL=yes - continuing."
 fi
 
 if command -v docker >/dev/null 2>&1; then
@@ -64,7 +64,7 @@ ui_run --stream "Build image" "${BUILDER[@]}" build -t heimdall:local "${ROOT}"
 ui_step "Loading image into the cluster (when possible)"
 loaded=false
 if command -v k3s >/dev/null 2>&1; then
-  echo -n "${UI_DIM}…${UI_RESET} Importing image into k3s "
+  echo -n "${UI_DIM}...${UI_RESET} Importing image into k3s "
   if "${BUILDER[@]}" save heimdall:local | sudo k3s ctr images import - >/dev/null 2>&1; then
     echo "${UI_GREEN}done${UI_RESET}"
     loaded=true
